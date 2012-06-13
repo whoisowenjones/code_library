@@ -1,0 +1,9 @@
+$guideMode: true;
+
+@mixin guideImage($url, $hAlign:center) {
+  @if $guideMode {
+    body {
+      background: url($url) no-repeat top $hAlign;
+    }
+  }
+}

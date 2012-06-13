@@ -1,0 +1,24 @@
+# Misc files
+.gitignore
+*.DS_Store
+*.tmproj
+.htaccess
+*.sublime-*
+
+# Images
+images/avatars/*
+images/captchas/*
+images/smileys/*
+images/member_photos/*
+images/signature_attachments/*
+images/pm_attachments/*
+images/uploads/*
+
+# Caches
+sized/
+thumbs/
+_thumbs/
+*/expressionengine/cache/*
+
+# Logs
+logs/*
