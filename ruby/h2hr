@@ -1,0 +1,82 @@
+#!/usr/bin/env ruby
+
+class Html2HamlRecursively
+
+  HTML_FILES = %w(*.erb *.htm *.html)
+
+  def initialize
+    begin
+      dir = ARGV[0] || 'app/views'
+      @test = dir
+    rescue 
+      puts "\nNo directory was given and app/views was not found.\nSince this is not a Rails app and no directory was given, this script is exiting.\n\n"
+      exit
+    end
+
+    Dir.chdir(dir)
+    @base_dir = Dir.getwd
+    puts "\nChecking depth..."
+    @dirs = Dir.glob("**/")
+    if @dirs.length > 100
+      puts "\nToo many directories to safely run this script recursively.\n\n"
+      exit
+    else
+      puts "Okay, looking for erb and html files..."
+      convert_recursively
+    end
+  end
+
+  private
+
+  def convert_recursively
+    @dirs.each do |dir|
+      Dir.chdir "#{@base_dir}/#{dir}"
+      files = Dir.glob(HTML_FILES)
+      if files
+        puts "\nIn #{dir.chop}..."
+        convert files
+      end
+    end
+    prompt_for_erb_removal
+  end
+
+  def convert(files)
+    files.each do |file|
+      filename_parts = file.split('.')
+      filename = filename_parts[0]
+      mime_type = filename_parts[1]
+      if mime_type == "html"
+        puts "Converting #{file} to #{filename}.html.haml"
+        new_filename = "#{filename}.html.haml"
+      else
+        #partials
+        puts "Converting #{file} to #{filename}.haml"
+        new_filename = "#{filename}.haml"
+      end
+      %x( html2haml #{file} #{new_filename} )
+    end
+  end
+
+  def prompt_for_erb_removal
+    puts "\nConversion to Haml complete!\n\nWould you like to remove .erb files? (y/n)"
+    response = gets
+    if response.downcase.chomp == "y"
+      remove_erb
+    elsif response.downcase.chomp == "n"
+      puts "\nAll done. Thanks!"
+    else
+      puts "about to ask again because response is: #{response.downcase}"
+      prompt_for_erb_removal
+    end
+  end
+
+  def remove_erb
+    puts "\nRemoving .erb files...\n\n"
+    Dir.chdir(@base_dir)
+    %x( find . -name "*.erb" -exec rm '{}' ';' )
+    puts "Done!"
+  end
+
+end
+
+h2hr = Html2HamlRecursively.new 

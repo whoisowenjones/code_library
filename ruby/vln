@@ -1,0 +1,75 @@
+#!/usr/bin/env ruby -wKU
+
+class SymLinker
+  require 'socket'
+
+  def initialize
+    sudome
+    setup_vhost_paths
+
+  end
+
+
+  private
+
+  def sudome
+    if ENV["USER"] != "root"
+      exec("sudo #{ENV['_']} #{ARGV.join(' ')}")
+    end
+  end
+  
+  def setup_vhost_paths
+    @vhost = ARGV[0]
+    if !@vhost
+      puts "\nTo use this script, please provide a vhost name.\n\n"
+      exit
+    end
+
+    @vhost_path = "#{Dir.home}/Dropbox/usr/local/nginx/conf/sites-available/#{@vhost}"
+    if File.exists?(@vhost_path)
+      symlink_vhost
+    else
+      puts "\nUnfortunately, that vhost doesn't exist:\n#{@vhost_path}\n\n"
+    end
+  end
+
+  def symlink_vhost
+    sites_enabled = '/usr/local/nginx/conf/sites-enabled/'
+    #first unlink others
+    symlinks = Dir.glob("#{sites_enabled}*")
+    symlinks.each do |ln| 
+      if File.symlink? ln
+        File.unlink ln
+      end
+    end
+    #create new
+    %x[ln -s #{@vhost_path} #{sites_enabled}#{@vhost}]
+    reload_nginx
+    open_site
+  end
+
+  def reload_nginx
+    puts "\nReloading nginx...\n"
+    %x[kill -HUP `cat /var/run/nginx.pid`]
+  end
+
+  def open_site
+    ip = local_ip
+    puts "Your IP address: #{ip}\n\n"
+    %x[open http://#{ip}.xip.io]
+  end
+
+  def local_ip
+    orig, Socket.do_not_reverse_lookup = Socket.do_not_reverse_lookup, true  # turn off reverse DNS resolution temporarily
+
+    UDPSocket.open do |s|
+      s.connect '64.233.187.99', 1 # use system call as if connecting to google
+      s.addr.last
+    end
+  ensure
+    Socket.do_not_reverse_lookup = orig
+  end
+
+end
+
+vln = SymLinker.new
