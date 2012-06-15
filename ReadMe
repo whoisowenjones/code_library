@@ -1,0 +1,14 @@
+## Git
+
+1. gitignore_for_ee - reasonable starting point for ExpressionEngine sites
+
+## Ruby
+
+1. vln - Removes all symlinks in /usr/local/nginx/conf/sites-enabled and symlinks new vhost
+from ~/Dropbox/usr/local/nginx/conf/sites-available
+
+2. lip - echoes current IP address and opens http://<current-ip-address>.xip.io
+
+## Sass
+
+1. guide.scss - mixin to place guide image 
