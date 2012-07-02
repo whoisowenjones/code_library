@@ -48,7 +48,7 @@ class SymLinker
       end
     end
     #create new
-    %x[ln -s #{@vhost_path} #{sites_enabled}#{@vhost}]
+    %x[ln -s #{@vhost_path} #{sites_enabled}#{@vhost_name}]
     reload_nginx
     open_site
   end
