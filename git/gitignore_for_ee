@@ -22,3 +22,5 @@ _thumbs/
 
 # Logs
 logs/*
+
+.sass-cache
