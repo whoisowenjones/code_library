@@ -1,0 +1,28 @@
+a.file {
+  display: block;
+  line-height: 1.4em;
+  min-height: 27px;
+  background: url('/images/site/file_types.png') 4px -350px no-repeat;
+  margin: 1.5em 0;
+  padding-left: 40px;
+  
+  &.pdf {
+    background-position: 4px 0 !important;
+  }
+
+  &.doc {
+    background-position: 4px -70px !important;
+  }
+
+  &.xls {
+    background-position: 4px -140px !important;
+  }
+
+  &.txt {
+    background-position: 4px -210px !important;
+  }
+
+  &.zip {
+    background-position: 4px -280px !important;
+  }
+}
