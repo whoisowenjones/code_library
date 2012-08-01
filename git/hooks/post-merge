@@ -1,0 +1,14 @@
+#!/bin/sh                                                                                                                             
+ 
+echo "Changing permissions to 777..."
+ 
+chmod -R 777 images/uploads
+ 
+echo "...done!"
+ 
+ 
+echo "Compressing assets..."
+ 
+cd bin; ./compress_assets.sh
+ 
+echo "...done!"
