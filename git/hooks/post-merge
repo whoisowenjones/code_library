@@ -3,6 +3,7 @@
 echo "Changing permissions to 777..."
  
 chmod -R 777 images/uploads
+chmod 777 safeguard/expressionengine/templates
  
 echo "...done!"
  
