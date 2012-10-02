@@ -1,0 +1,58 @@
+/*
+
+  Requires respond_to.scss and content_layout.scss
+
+*/
+
+.ojp-marquee {
+  position: relative;
+  width: 100%;
+
+  & > div {
+    position: absolute;
+    top: 0;
+    display: none;
+    width: 100%;
+
+    & > img {
+      width: 100%;
+      margin: 0 auto -5px auto;
+    }
+    
+    & > div {
+      position: absolute;
+      width: $content-width;
+      left: 50%;
+      margin-left: -($content-width / 2);
+
+      @include respond-to('medium-screens') {
+        width: auto;
+        left: auto;
+        margin-left: auto;
+      }
+
+      @include respond-to('handhelds') {
+        width: auto;
+        left: auto;
+        margin-left: auto;
+      }
+    }
+  }
+
+  & > ul.ojp-marquee-nav {
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    list-style: none;
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    
+    li {
+      cursor: pointer;
+    }
+  }
+}
+
