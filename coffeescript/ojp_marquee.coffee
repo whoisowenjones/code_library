@@ -2,196 +2,202 @@ module = (name) ->
   window[name] = window[name] or {}
 
 module "OJP"
-module "Insitu"
 
-$ ->
-  new OJP.Utils()
-  new Insitu.Events()
+OJP.Marquee = class Marquee
 
-  $(".ojp-marquee").each ->
-    new OJP.Marquee($(this))
+  SIZES: [640, 960, 1140]
 
+  constructor: (container) ->
+    if (window.navigator.userAgent.indexOf("MSIE 8.0") > -1)
+      @.ie8 = true
+    @$container = container
+    if @$container.attr("data-fade-interval")
+      @fade_interval = parseInt(@$container.attr("data-fade-interval"), 10)
+    else
+      @fade_interval = 4000
+    @fade_speed = parseInt(@$container.attr("data-fade-speed"), 10) || 600
+    @nav = @$container.attr("data-nav") unless typeof @$container.attr("data-nav") == "undefined" ||
+      @$container.attr("data-nav") == "false"
+    @pager = @$container.attr("data-pager") unless typeof @$container.attr("data-pager") == "undefined" ||
+      @$container.attr("data-pager") == "false"
+    @ratio = @$container.attr("data-ratio")
+    @max_width = @$container.attr("data-max-width")
+    @$divs = @$container.children("div")
+    @$imgs = @$divs.children("img")
+    if @$divs.length == 1
+      @nav = false
+      @pager = false
+    @auto_advance = true if @fade_interval > 0 && @$divs.length > 1
+    @cycling = true if @auto_advance
+    @cur_width = @$container.width()
+    @cur_img_width = 0
+    @cur_fading_index = 0
+    @fade_amt = 0
+    @advance_timeout = 0
+    @init()
 
-Insitu.Events = class Events
+  init: ->
+    @init_current()
+    if @nav
+      @init_nav()
+    else
+      @$container.addClass("no-nav")
+    if @pager
+      @init_pager()
+    else
+      @$container.addClass("no-pager")
+    @init_events()
   
-  constructor: ->
-    @initNav()
-    @timeoutInterval = 100
-    @initVideos()
+  init_events: ->
+    $(window).resize => @resize()
+    
+    if @pager
+      marquee = @
+      $lis = $("ul.ojp-marquee-nav li", @$container)
+      if @nav
+        $lis.splice($lis.length-1, 1)
+        $lis.splice(0, 1)
+      $lis.each ->
+        index = parseInt($(this).text(), 10) - 1
+        $(this).click =>
+          marquee.pager_clicked index
 
-  initNav: ->
-    _events = this
+  init_current: ->
+    if @$imgs.length > 0
+      @cur_img_width = @best_img_size()
+      @source_images()
+    else
+      @$container.height(@get_height())
+      @fade_in()
 
-    $("#alt-nav").each ->
-      $(this).change ->
-        select = $(this)[0]
-        location.href = select.options[select.selectedIndex].value
+  source_images: ->
+    @loaded = []
+    for img in @$imgs
+      new_source = "#{$(img).attr('data-path')}_#{@cur_img_width}/#{$(img).attr('data-filename')}"
+      # new source
+      if img.src.indexOf(new_source) == -1
+        window.clearTimeout(@advance_timeout)
+        img.src = new_source
 
-    $("nav#primary li").each ->
-      # disable clicks for touch
-      if OJP.Utils.browser.is_mobile
-        $("a", $(this)).attr("href", "")
-        $("a", $(this)).click -> return false
+        #don't wait for load signal if IE8 - this seems to be enough to force cached load callback
+        if @.ie8
+          @$container.height(@get_height())
+          @$imgs.css("height", @$container.height())
 
-      nav_id = $(this).attr("id").substr(4)
+        $(img).load (e) =>
+          @loaded.push e.target.src
+          if @loaded.length == 1
+            @$container.height(@get_height())
+            if @.ie8
+              @$imgs.css("height", @$container.height())
 
-      $(this).hover(
-        ->
-          window.clearTimeout(_events.timeout)
-          _events.clearHoverStates()
-          $("#subnav-" + nav_id).show()
-          $(this).addClass("hover")
-        ->
-          _events.timeout = window.setTimeout _events.hideCallback, _events.timeoutInterval, nav_id
-      )
-      
-    $("nav#secondary div.wrap").hover(
-      ->
-        window.clearTimeout(_events.timeout)
-        _events.subnav_over = true
-      ->
-        _events.subnav_over = false
-        nav_id = $(this).attr("id").substr(7)
-        _events.hideCallback(nav_id)
-    )
+          if @loaded.length == @$imgs.length
+            @fade_in()
 
-    # close buttons for touch
-    $('.nav-close-btn').each ->
-      id = $(this).parent().parent()[0].id.substr(3)
-      $(this).bind('touchstart', (e) ->
-        e.cancelBubble = true
-        e.stopPropagation()
-        $("#"+id).removeClass("hover")
-        $(this).parent().parent().css("display", "none")
-      )
+  best_img_size: ->
+    best_width = @SIZES[0]
+    for size,i in @SIZES
+      if size <= @cur_width
+        best_width = size
+    best_width
 
-    # print buttons
-    $('.print-button button').click =>
-        window.print()
+  resize: ->
+    @cur_width = document.documentElement.offsetWidth
+    @cur_img_width = @best_img_size()
+    @$container.height(@get_height())
+    if @.ie8
+      @$imgs.css("height", @$container.height())
+    @source_images()
 
-    # regions
-    $("#subnav-regions").each ->
-      $("#nav-regions-list h3 a").each ->
-        $(this).hover(
-          -> overRegionsList($(this)),
-          -> outRegionsList($(this))
-        )
+  get_height: ->
+    if @cur_width >= @max_width
+      height = Math.floor(@max_width * @ratio)
+    else
+      height = Math.floor(@cur_width * @ratio)
+    height
 
-      overRegionsList = ($el) ->
-        class_name = $el.attr("class")
-        $("#regions-map div." + class_name + " a").addClass("hover")
+  fade_in: ->
+    if @auto_advance
+      $(@$divs[@cur_fading_index]).fadeIn(@fade_speed, => @advance_timeout = window.setTimeout(@advance, @fade_interval))
+    else
+      window.clearTimeout(@advance_timeout)
+      $(@$divs[@cur_fading_index]).fadeIn(@fade_speed)
+    if @pager
+      $("ul.ojp-marquee-nav li.current", @$container).removeClass("current")
+      if @nav
+        $($("ul.ojp-marquee-nav li", @$container)[@cur_fading_index + 1]).addClass("current")
+      else
+        $($("ul.ojp-marquee-nav li", @$container)[@cur_fading_index]).addClass("current")
 
-      outRegionsList = ($el) ->
-        class_name = $el.attr("class")
-        $("#regions-map div." + class_name + " a").removeClass("hover")
+  advance: =>
+    window.clearTimeout(@advance_timeout)
+    @hide()
+    if @cur_fading_index < @$divs.length - 1
+      @cur_fading_index++
+    else
+      @cur_fading_index = 0
+    @fade_in()
 
-      $("#regions-map div").each ->
-        $(this).hover(
-          -> overRegionMap($(this)),
-          -> outRegionMap($(this))
-        )
+  retreat: ->
+    window.clearTimeout(@advance_timeout)
+    @hide()
+    if @cur_fading_index == 0
+      @cur_fading_index = @$divs.length - 1
+    else
+      @cur_fading_index--
+    @fade_in()
 
-      overRegionMap = ($el) ->
-        class_name = getClassName($el)
-        $('#nav-regions-list a.' + class_name).addClass("hover")
+  manual_advance: (e, dir) =>
+    return if $(e.target).hasClass("disabled")
+    unless @cycling
+      if $(e.target).hasClass("next")
+        $(".ojp-marquee-nav li.prev").removeClass("disabled")
+        if (@cur_fading_index + 2) == @$divs.length
+          $(e.target).addClass("disabled")
+      else
+        $(".ojp-marquee-nav li.next").removeClass("disabled")
+        if (@cur_fading_index - 1) == 0
+          $(e.target).addClass("disabled")
+    window.clearTimeout(@advance_timeout)
+    @auto_advance = false
+    if dir == 1 then @advance() else @retreat()
 
-      outRegionMap = ($el) ->
-        class_name = getClassName($el)
-        $('#nav-regions-list a.' + class_name).removeClass("hover")
+  pager_clicked: (index) ->
+    window.clearTimeout(@advance_timeout)
+    @auto_advance = false
+    return if index == @cur_fading_index
+    @hide()
+    @cur_fading_index = index - 1
+    @advance()
 
-      getClassName = ($el) ->
-        re = /nav-region-(\S+)/
-        class_name = $el.attr("class")
-        match = class_name.match(re)
-        if match
-          class_name = match[0]
+  hide: =>
+    $(@$divs[@cur_fading_index]).fadeOut(@fade_speed)
 
-  hideCallback: (nav_id) ->
-    unless @subnav_over
-      $subnav_el = $("#subnav-" + nav_id)
-      $nav_el = $("#nav-" + nav_id)
-      $subnav_el.hide()
-      $nav_el.removeClass("hover")
+  init_nav: ->
+    @$container.append("<ul class='ojp-marquee-nav'><li class='prev'>Previous</li><li class='next'>Next</li>")
+    $prev = $(".ojp-marquee-nav li.prev", @$container)
+    unless @cycling
+      $prev.addClass("disabled")
+    $prev.click (e) => @manual_advance(e, -1)
+    $(".ojp-marquee-nav li.next", @$container).click (e) => @manual_advance(e, 1)
 
-  clearHoverStates: ->
-    $("nav#primary li").each(-> $(this).removeClass("hover"))
-    $("nav#secondary div.wrap").each(-> $(this).css("display", "none"))
-
-  resize: =>
-    $('.video').each ->
-      @cur_width = $(this).width()
-      @max_width = $(this).attr("data-max-width")
-      @ratio = $(this).attr("data-ratio")
-      @height = Math.floor(Math.min(@cur_width, @max_width) * @ratio)
-      $(this).height(@height)
-
-  initVideos: ->
-    if ($('.video').length > 0)
-      $(window).resize => @resize()
-      @resize()
-
-
-OJP.Utils = class Utils
-
-  @get_browser: ->
-    b = {}
-    if navigator.userAgent.toLowerCase().indexOf("mobile") > -1
-      b.is_mobile = true
-    if b.is_mobile && navigator.userAgent.toLowerCase().indexOf("applewebkit") > -1
-      b.is_ios = true
-    if navigator.userAgent.toLowerCase().indexOf("phone") > -1
-      b.is_phone = true
-    if navigator.userAgent.toLowerCase().indexOf("ipad") > -1
-      b.is_ipad = true
-    return b
-
-  @browser: @get_browser()
-
-  constructor: ->
-    @site_utils()
-    if OJP.Utils.browser.is_mobile
-      $('body').addClass("is_mobile")
-
-  site_utils: ->
-    $(".placeholder").each ->
-      $this = $(this)
-      input = document.createElement('input')
-      unless 'placeholder' in input
-        defaultTxt = $this.attr("placeholder")
-        $this.val(defaultTxt)
-        $this.addClass("blurred")
-        $this.focus ->
-          if $this.val() == defaultTxt
-            $this.val('')
-            $this.removeClass("blurred")
-        $this.blur ->
-          if $this.val() == ""
-            $this.val(defaultTxt)
-            $this.addClass("blurred")
-
-    $("a.tel").each(->
-      if Utils.browser.is_phone
-        num = $(this).text()
-        num = num.replace(/(\.|-|\)|\(|\s)/g, "")
-        if num.indexOf("+") > -1
-          href = "tel://#{num}"
+  init_pager: ->
+    unless @nav
+      pager = "<ul class='ojp-marquee-nav'>"
+    for div, i in @$divs
+      if i == 0
+        if @nav
+          pager = "<li class='current'>#{i + 1}</li>"
         else
-          href = "tel://1-#{num}"
-        $(this).attr("href", href)
-    )
-
-    # file type icons
-    $("a.file").each(->
-      filetypes =
-        pdf: ["pdf"],
-        doc: ["doc", "docx"],
-        xls: ["xls", "xlsx"],
-        txt: ["txt"],
-        zip: ["zip"]
-      href = $(this)[0].href
-      ext = href.match(/(?!\.)[a-zA-Z]{3,4}$/)
-      if ext
-        ext = ext[0]
-        for k, v of filetypes
-          $(this).addClass(k) if ext in v
-    )
+          pager += "<li class='current'>#{i + 1}</li>"
+      else
+        pager += "<li>#{i + 1}</li>"
+    if @nav
+      # insert into existing list
+      $nav_next = $('.ojp-marquee-nav li.next', @$container)
+      # change this - insert before doesnt take 2nd param
+      next = $('.ojp-marquee-nav li.next', @$container)
+      $(pager).insertBefore(next)
+    else
+      pager += "</ul>"
+      @$container.append(pager)
