@@ -34,6 +34,9 @@ namespace "db" do
 
     if File.exist? sql_file
 
+      Rake::Task["db:drop"].execute
+      Rake::Task["db:create"].execute
+
       if config["adapter"] == "postgresql"
         unless config['password'].nil?
           ENV["PGPASSWORD"] = config['password'].to_s
@@ -43,8 +46,10 @@ namespace "db" do
         `mysql -u #{config['username']} -p#{config['password'].to_s} --default-character-set=utf8 #{config['database']} < #{sql_file}`
       end
 
+      puts "\nThat should do it. Get to work.\n\n"
+
     else
-      puts "No data file in db/ named '#{file_name}'"
+      puts "No data file in db/ named '#{file_name}'."
     end
 
   end
