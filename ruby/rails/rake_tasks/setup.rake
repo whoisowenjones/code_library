@@ -1,11 +1,28 @@
 namespace "setup" do
   desc "Setup directories"
-  task :backbonejs, :environment do
-    puts "Running the shit out of it: #{Rails.root}"
-    `mkdir #{Rails.root}/app/assets/templates; touch #{Rails.root}/app/assets/templates/.gitkeep`
-    `mkdir #{Rails.root}/app/assets/javascripts/models; touch #{Rails.root}/app/assets/javascripts/models/.gitkeep`
-    `mkdir #{Rails.root}/app/assets/javascripts/collections; touch #{Rails.root}/app/assets/javascripts/collections/.gitkeep`
-    `mkdir #{Rails.root}/app/assets/javascripts/views; touch #{Rails.root}/app/assets/javascripts/views/.gitkeep`
-    `mkdir #{Rails.root}/app/assets/javascripts/routers; touch #{Rails.root}/app/assets/javascripts/routers/.gitkeep`
+  namespace :backbone do
+
+    templates = "#{Rails.root}/app/assets/templates"
+    directory "#{templates}"
+
+    models = "#{Rails.root}/app/assets/javascripts/models"
+    directory "#{models}"
+
+    collections = "#{Rails.root}/app/assets/javascripts/collections"
+    directory "#{collections}"
+
+    views = "#{Rails.root}/app/assets/javascripts/views"
+    directory "#{views}"
+
+    routers = "#{Rails.root}/app/assets/javascripts/routers"
+    directory "#{routers}"
+
+    task :dirs => [templates, models, collections, views, routers] do
+      `touch #{templates}/.gitkeep`
+      `touch #{models}/.gitkeep`
+      `touch #{collections}/.gitkeep`
+      `touch #{views}/.gitkeep`
+      `touch #{routers}/.gitkeep`
+    end
   end
 end
