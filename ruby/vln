@@ -3,6 +3,8 @@
 class SymLinker
   require 'socket'
 
+  attr_accessor :pow_link
+
   DROPBOX = "#{Dir.home}/Dropbox/usr/local/nginx/conf/sites-available/"
 
   def initialize
@@ -23,7 +25,12 @@ class SymLinker
     vhost_name = ARGV[0]
     if !vhost_name
       # try vhost from dir name
-      vhost_name = "#{File.basename(Dir.getwd).downcase}.dev"
+      if File.exist? ".powrc"
+        @pow_link = get_pow_link
+        vhost_name = "localhost.pow"
+      else
+        vhost_name = "#{File.basename(Dir.getwd).downcase}.dev"
+      end
     end
 
     @vhost_path = "#{DROPBOX}#{vhost_name}"
@@ -61,7 +68,14 @@ class SymLinker
   def open_site
     ip = local_ip
     puts "Your IP address: #{ip}\n\n"
-    %x[open http://#{ip}.xip.io]
+    
+    if @pow_link
+      pow_url = "http://#{@pow_link}.#{ip}.xip.io"
+      puts "Pow app found, opening #{pow_url}\n\n"
+      %x[open #{pow_url}]
+    else
+      %x[open http://#{ip}.xip.io]
+    end
   end
 
   def local_ip
@@ -73,6 +87,15 @@ class SymLinker
     end
   ensure
     Socket.do_not_reverse_lookup = orig
+  end
+  
+  def get_pow_link
+    Dir.glob("#{Dir.home}/.pow/**/*").each do |ln|
+      dir = File.readlink(ln)
+      if dir == Dir.pwd
+        return File.basename(ln)
+      end
+    end
   end
 
 end
