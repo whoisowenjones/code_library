@@ -5,7 +5,7 @@ module "OJP"
 
 OJP.Marquee = class Marquee
 
-  SIZES: [640, 960, 1140]
+  SIZES: [1000, 1324, 1680]
 
   constructor: (container) ->
     if (window.navigator.userAgent.indexOf("MSIE 8.0") > -1)
@@ -22,6 +22,7 @@ OJP.Marquee = class Marquee
       @$container.attr("data-pager") == "false"
     @ratio = @$container.attr("data-ratio")
     @max_width = @$container.attr("data-max-width")
+    @min_width = @$container.attr("data-min-width")
     @$divs = @$container.children("div")
     @$imgs = @$divs.children("img")
     if @$divs.length == 1
@@ -37,6 +38,8 @@ OJP.Marquee = class Marquee
     @init()
 
   init: ->
+    @$divs.each ->
+      $(this).css("display", "none")
     @init_current()
     if @nav
       @init_nav()
@@ -63,17 +66,17 @@ OJP.Marquee = class Marquee
           marquee.pager_clicked index
 
   init_current: ->
+    @$container.height(@get_height())
     if @$imgs.length > 0
       @cur_img_width = @best_img_size()
       @source_images()
     else
-      @$container.height(@get_height())
       @fade_in()
 
   source_images: ->
     @loaded = []
     for img in @$imgs
-      new_source = "#{$(img).attr('data-path')}_#{@cur_img_width}/#{$(img).attr('data-filename')}"
+      new_source = "#{$(img).attr('data-path')}#{@cur_img_width}/#{$(img).attr('data-filename')}"
       # new source
       if img.src.indexOf(new_source) == -1
         window.clearTimeout(@advance_timeout)
@@ -81,13 +84,12 @@ OJP.Marquee = class Marquee
 
         #don't wait for load signal if IE8 - this seems to be enough to force cached load callback
         if @.ie8
-          @$container.height(@get_height())
           @$imgs.css("height", @$container.height())
 
         $(img).load (e) =>
           @loaded.push e.target.src
           if @loaded.length == 1
-            @$container.height(@get_height())
+            #@$container.height(@get_height())
             if @.ie8
               @$imgs.css("height", @$container.height())
 
@@ -111,9 +113,11 @@ OJP.Marquee = class Marquee
 
   get_height: ->
     if @cur_width >= @max_width
-      height = Math.floor(@max_width * @ratio)
+      height = Math.floor(@max_width * @ratio) - 6 # not necessary if not bottom aligning
+    else if @cur_width <= @min_width
+      height = Math.floor(@min_width * @ratio)
     else
-      height = Math.floor(@cur_width * @ratio)
+      height = Math.floor(@cur_width * @ratio) - 6 # not necessary if not bottom aligning
     height
 
   fade_in: ->

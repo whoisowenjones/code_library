@@ -4,6 +4,22 @@
 
 */
 
+/*html.ojp-marquee-loading body {*/
+  /*-moz-opacity: 0;*/
+  /*-webkit-opacity: 0;*/
+  /*-o-opacity: 0;*/
+  /*-ms-opacity: 0;*/
+  /*opacity: 0;*/
+/*}*/
+
+/*html.ojp-marquee-loaded body {*/
+  /*-moz-opacity: 1.0;*/
+  /*-webkit-opacity: 1.0;*/
+  /*-o-opacity: 1.0;*/
+  /*-ms-opacity: 1.0;*/
+  /*opacity: 1.0;*/
+/*}*/
+
 .ojp-marquee {
   position: relative;
   width: 100%;
@@ -25,13 +41,19 @@
       left: 50%;
       margin-left: -($content-width / 2);
 
-      @include respond-to('medium-screens') {
+      @include respond-to('medium') {
         width: auto;
         left: auto;
         margin-left: auto;
       }
 
-      @include respond-to('handhelds') {
+      @include respond-to('small') {
+        width: auto;
+        left: auto;
+        margin-left: auto;
+      }
+
+      @include respond-to('tiny') {
         width: auto;
         left: auto;
         margin-left: auto;
