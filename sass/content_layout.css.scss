@@ -1,11 +1,11 @@
 @mixin content-layout {
   position: absolute;
-  @include respond-to(wide-screens) {
+  @include respond-to("large") {
     width: $content-width;
     left: 50%;
     margin-left: -($content-width / 2);
   }
-  @include respond-to(medium-screens) {
+  @include respond-to("small") {
     width: auto;
     left: auto;
     margin-left: auto;
