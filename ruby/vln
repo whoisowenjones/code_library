@@ -9,6 +9,7 @@ class SymLinker
 
   def initialize
     sudome
+    @pow_link = nil
     setup_vhost_paths
   end
 
