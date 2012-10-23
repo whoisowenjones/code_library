@@ -1,5 +1,11 @@
 namespace "db" do
 
+  desc "Drop and recreate database"
+  task :rebuild => :environment do
+    Rake::Task["db:drop"].invoke
+    Rake::Task["db:create"].invoke
+  end
+
   desc "Dump schema and content"
   task "dump" => :environment do
     rails_env = (Rails.env || 'development')
@@ -16,7 +22,7 @@ namespace "db" do
   end
 
   desc "Restore dev database from SQL file"
-  task "restore" => :environment do
+  task "restore" => [:environment, "db:rebuild"] do
     rails_env = (Rails.env || 'development')
     app_name = Rails.application.class.parent_name
     config = ActiveRecord::Base.configurations[rails_env]
@@ -33,9 +39,6 @@ namespace "db" do
     sql_file = "db/#{file_name}"
 
     if File.exist? sql_file
-
-      Rake::Task["db:drop"].execute
-      Rake::Task["db:create"].execute
 
       if config["adapter"] == "postgresql"
         unless config['password'].nil?
