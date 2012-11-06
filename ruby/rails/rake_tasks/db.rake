@@ -11,6 +11,20 @@ namespace "db" do
     rails_env = (Rails.env || 'development')
     app_name = Rails.application.class.parent_name
     config = ActiveRecord::Base.configurations[rails_env]
+    host = (config['host'] || 'localhost')
+    if config["adapter"] == "postgresql"
+      unless config['password'].nil?
+        ENV["PGPASSWORD"] = config['password'].to_s
+      end
+      `pg_dump -Fc --no-acl --no-owner -h #{host} -U #{config['username']} #{config['database']} > #{Rails.root}/db/#{app_name}_#{rails_env}.dump`
+    end
+  end
+
+  desc "Export schema and content"
+  task "export_all" => :environment do
+    rails_env = (Rails.env || 'development')
+    app_name = Rails.application.class.parent_name
+    config = ActiveRecord::Base.configurations[rails_env]
     if config["adapter"] == "postgresql"
       unless config['password'].nil?
         ENV["PGPASSWORD"] = config['password'].to_s
