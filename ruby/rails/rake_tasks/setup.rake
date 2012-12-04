@@ -2,7 +2,7 @@ namespace "setup" do
   desc "Setup default BackboneJS directories (for new projects)"
   namespace :backbone do
 
-    templates = "#{Rails.root}/app/assets/javascripts/templates"
+    templates = "#{Rails.root}/app/assets/templates"
     directory "#{templates}"
 
     models = "#{Rails.root}/app/assets/javascripts/models"

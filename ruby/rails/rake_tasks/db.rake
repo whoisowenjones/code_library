@@ -2,6 +2,7 @@ namespace "db" do
 
   desc "Drop and recreate database"
   task :rebuild => :environment do
+    `powify server stop`
     Rake::Task["db:drop"].invoke
     Rake::Task["db:create"].invoke
   end
@@ -16,6 +17,7 @@ namespace "db" do
       unless config['password'].nil?
         ENV["PGPASSWORD"] = config['password'].to_s
       end
+      #puts "pg_dump -Fc --no-acl --no-owner -h #{host} -U #{config['username']} #{config['database']} > #{Rails.root}/db/#{app_name}_#{rails_env}.dump"
       `pg_dump -Fc --no-acl --no-owner -h #{host} -U #{config['username']} #{config['database']} > #{Rails.root}/db/#{app_name}_#{rails_env}.dump`
     end
   end
@@ -29,6 +31,7 @@ namespace "db" do
       unless config['password'].nil?
         ENV["PGPASSWORD"] = config['password'].to_s
       end
+      #puts "pg_dump -U #{config['username']} #{config['database']} > #{Rails.root}/db/#{app_name}_#{rails_env}.sql"
       `pg_dump -U #{config['username']} #{config['database']} > #{Rails.root}/db/#{app_name}_#{rails_env}.sql`
     elsif config.adapter == ("mysql" || "mysql2")
       `mysqldump -r #{Rails.root}/db/#{app_name}_#{rails_env}.sql #{config['database']} -u #{config['username']} -p#{config['password'].to_s}`

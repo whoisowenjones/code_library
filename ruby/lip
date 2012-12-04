@@ -1,12 +1,19 @@
 #!/usr/bin/env ruby -wKU
 
-class Local_IP_Opener
+class Local_IP
   require 'socket'
 
   def self.open_site
     ip = self.local_ip
     puts "Your IP address: #{ip}\n\n"
-    %x[open http://#{ip}.xip.io]
+    if ARGV[0]
+      %x[open http://#{ARGV[0]}.#{ip}.xip.io:8080]
+    elsif Dir.pwd.split('/')[-2].downcase == "sites"
+      domain = Dir.pwd.split('/')[-1]
+      %x[open http://#{domain}.#{ip}.xip.io:8080]
+    else
+      %x[open http://#{ip}:8080]
+    end
   end
 
   def self.local_ip
@@ -22,5 +29,4 @@ class Local_IP_Opener
 
 end
 
-
-Local_IP_Opener.open_site
+Local_IP.open_site
