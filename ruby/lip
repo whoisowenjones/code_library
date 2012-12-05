@@ -10,7 +10,12 @@ class Local_IP
       %x[open http://#{ARGV[0]}.#{ip}.xip.io:8080]
     elsif Dir.pwd.split('/')[-2].downcase == "sites"
       domain = Dir.pwd.split('/')[-1]
-      %x[open http://#{domain}.#{ip}.xip.io:8080]
+      if File.exists? ".powrc"
+        port = ""
+      else
+        port = ":8080"
+      end
+      %x[open http://#{domain}.#{ip}.xip.io#{port}]
     else
       %x[open http://#{ip}:8080]
     end
