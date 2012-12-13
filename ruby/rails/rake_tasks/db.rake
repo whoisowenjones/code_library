@@ -1,7 +1,29 @@
 namespace "db" do
 
+  desc "Drop and recreate database"
+  task :rebuild => :environment do
+    `powify server stop`
+    Rake::Task["db:drop"].invoke
+    Rake::Task["db:create"].invoke
+  end
+
   desc "Dump schema and content"
   task "dump" => :environment do
+    rails_env = (Rails.env || 'development')
+    app_name = Rails.application.class.parent_name
+    config = ActiveRecord::Base.configurations[rails_env]
+    host = (config['host'] || 'localhost')
+    if config["adapter"] == "postgresql"
+      unless config['password'].nil?
+        ENV["PGPASSWORD"] = config['password'].to_s
+      end
+      #puts "pg_dump -Fc --no-acl --no-owner -h #{host} -U #{config['username']} #{config['database']} > #{Rails.root}/db/#{app_name}_#{rails_env}.dump"
+      `pg_dump -Fc --no-acl --no-owner -h #{host} -U #{config['username']} #{config['database']} > #{Rails.root}/db/#{app_name}_#{rails_env}.dump`
+    end
+  end
+
+  desc "Export schema and content"
+  task "export_all" => :environment do
     rails_env = (Rails.env || 'development')
     app_name = Rails.application.class.parent_name
     config = ActiveRecord::Base.configurations[rails_env]
@@ -9,6 +31,7 @@ namespace "db" do
       unless config['password'].nil?
         ENV["PGPASSWORD"] = config['password'].to_s
       end
+      #puts "pg_dump -U #{config['username']} #{config['database']} > #{Rails.root}/db/#{app_name}_#{rails_env}.sql"
       `pg_dump -U #{config['username']} #{config['database']} > #{Rails.root}/db/#{app_name}_#{rails_env}.sql`
     elsif config.adapter == ("mysql" || "mysql2")
       `mysqldump -r #{Rails.root}/db/#{app_name}_#{rails_env}.sql #{config['database']} -u #{config['username']} -p#{config['password'].to_s}`
@@ -16,7 +39,7 @@ namespace "db" do
   end
 
   desc "Restore dev database from SQL file"
-  task "restore" => :environment do
+  task "restore" => [:environment, "db:rebuild"] do
     rails_env = (Rails.env || 'development')
     app_name = Rails.application.class.parent_name
     config = ActiveRecord::Base.configurations[rails_env]
@@ -33,9 +56,6 @@ namespace "db" do
     sql_file = "db/#{file_name}"
 
     if File.exist? sql_file
-
-      Rake::Task["db:drop"].execute
-      Rake::Task["db:create"].execute
 
       if config["adapter"] == "postgresql"
         unless config['password'].nil?
