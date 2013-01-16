@@ -38,7 +38,7 @@ while (line = file.gets)
     end
   end
   if line =~ /\['#{env}'\]\['password'\]/
-    password_match = line.match(/\W(.[^'"]+)\W;$/)
+    password_match = line.match(/\W(\w[^'"]+)\W;$/)
     if password_match.nil? || password_match.length < 2
       ''
     else
