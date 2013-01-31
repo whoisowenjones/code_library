@@ -174,6 +174,14 @@ OJP.Marquee = class Marquee
     @cur_fading_index = index - 1
     @advance()
 
+  swipe_left: -> 
+    @stop()
+    @advance()
+
+  swipe_right: -> 
+    @stop()
+    @retreat()
+
   hide: =>
     $(@$divs[@cur_fading_index]).fadeOut(@fade_speed)
 
@@ -184,6 +192,18 @@ OJP.Marquee = class Marquee
       $prev.addClass("disabled")
     $prev.click (e) => @manual_advance(e, -1)
     $(".ojp-marquee-nav li.next", @$container).click (e) => @manual_advance(e, 1)
+
+    # Touch events require jquery.touchSwipe.js
+    if $.fn.swipe  
+      $(@$container).swipe(
+          swipeLeft: => 
+            @swipe_left()
+          
+          swipeRight: =>
+            @swipe_right()
+          
+          threshold:1
+        ) 
 
   init_pager: ->
     unless @nav
