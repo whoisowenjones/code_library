@@ -281,17 +281,8 @@ OJP.Marquee = Marquee = (function() {
     $prev.click(function(e) {
       return _this.manual_advance(e, -1);
     });
-    $(".ojp-marquee-nav li.next", this.$container).click(function(e) {
+    return $(".ojp-marquee-nav li.next", this.$container).click(function(e) {
       return _this.manual_advance(e, 1);
-    });
-    return $(this.$container).swipe({
-      swipeLeft: function() {
-        return _this.swipe_left();
-      },
-      swipeRight: function() {
-        return _this.swipe_right();
-      },
-      threshold: 1
     });
   };
 
