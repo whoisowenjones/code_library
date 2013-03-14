@@ -193,17 +193,17 @@ OJP.Marquee = class Marquee
     $prev.click (e) => @manual_advance(e, -1)
     $(".ojp-marquee-nav li.next", @$container).click (e) => @manual_advance(e, 1)
 
-    # Touch events require jquery.touchSwipe.js
-    # if $.fn.swipe  
-    #   $(@$container).swipe(
-    #       swipeLeft: => 
-    #         @swipe_left()
-          
-    #       swipeRight: =>
-    #         @swipe_right()
-          
-    #       threshold:1
-    #     ) 
+    #Touch events require jquery.touchSwipe.js
+    if $.fn.swipe  
+      $(@$container).swipe(
+          swipeLeft: => 
+            @swipe_left()
+        
+          swipeRight: =>
+            @swipe_right()
+        
+          threshold:1
+        ) 
 
   init_pager: ->
     unless @nav
