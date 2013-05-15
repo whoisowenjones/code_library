@@ -21,7 +21,8 @@ file_path = ARGV[1]
 file = File.new(file_path)
 while (line = file.gets)
   if line =~ /\['#{env}'\]\['database'\]/
-    database_match = line.match(/'(\w+)';$/)
+    puts line
+    database_match = line.match(/\W(\w+)\W;$/)
     if database_match.nil? || database_match.length < 2
       ''
     else
@@ -29,7 +30,7 @@ while (line = file.gets)
     end
   end
   if line =~ /\['#{env}'\]\['username'\]/
-    username_match = line.match(/'(\w+)';$/)
+    username_match = line.match(/\W(\w+)\W;$/)
     if username_match.nil? || username_match.length < 2
       ''
     else
@@ -37,7 +38,7 @@ while (line = file.gets)
     end
   end
   if line =~ /\['#{env}'\]\['password'\]/
-    password_match = line.match(/'(.[^']+)';$/)
+    password_match = line.match(/\W(\w[^'"]+)\W;$/)
     if password_match.nil? || password_match.length < 2
       ''
     else
