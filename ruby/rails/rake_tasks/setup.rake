@@ -36,7 +36,39 @@ namespace "setup" do
     end
   end
 
+  #desc "Set up test directories if not present"
+  namespace :spec do
+    controllers = "#{Rails.root}/spec/controllers"
+    directory "#{controllers}"
+
+    features = "#{Rails.root}/spec/features"
+    directory "#{features}"
+
+    helpers = "#{Rails.root}/spec/helpers"
+    directory "#{helpers}"
+
+    requests = "#{Rails.root}/spec/requests"
+    directory "#{requests}"
+
+    routing = "#{Rails.root}/spec/routing"
+    directory "#{routing}"
+
+    views = "#{Rails.root}/spec/views"
+    directory "#{views}"
+
+    task :dirs => [controllers, features, helpers, requests, routing, views] do
+      `touch #{controllers}/.gitkeep`
+      `touch #{features}/.gitkeep`
+      `touch #{helpers}/.gitkeep`
+      `touch #{requests}/.gitkeep`
+      `touch #{routing}/.gitkeep`
+      `touch #{views}/.gitkeep`
+    end
+  end
+
   #desc "Set up Rails app for new user"
   task :project => ['setup:db_file', 'db:restore'] do
   end
+  
+  
 end
