@@ -2,7 +2,6 @@ namespace "db" do
 
   desc "Drop and recreate database"
   task :rebuild => :environment do
-    `powify server stop`
     Rake::Task["db:drop"].invoke
     Rake::Task["db:create"].invoke
   end
