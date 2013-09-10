@@ -1,4 +1,7 @@
-#!/usr/bin/env ruby -wKU
+#!/usr/bin/env ruby -wU
+#
+# Takes either site name or port (for localhost) as argument.
+#
 
 class Local_IP
   require 'socket'
@@ -6,16 +9,18 @@ class Local_IP
   def self.open_site
     ip = self.local_ip
     puts "Your IP address: #{ip}\n\n"
-    if ARGV[0]
+    in_sites_dir = Dir.pwd.split('/')[-2].downcase == "sites"
+    if ARGV[0] && !in_sites_dir
       %x[open http://#{ARGV[0]}.#{ip}.xip.io:8080]
-    elsif Dir.pwd.split('/')[-2].downcase == "sites"
+    elsif in_sites_dir
       domain = Dir.pwd.split('/')[-1]
-      if File.exists? ".powrc"
-        port = ""
+      if ARGV[0]
+        port = ":#{ARGV[0]}"
+        %x[open http://#{ip}.xip.io#{port}]
       else
         port = ":8080"
+        %x[open http://#{domain}.#{ip}.xip.io#{port}]
       end
-      %x[open http://#{domain}.#{ip}.xip.io#{port}]
     else
       %x[open http://#{ip}:8080]
     end
