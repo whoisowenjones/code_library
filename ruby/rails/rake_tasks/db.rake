@@ -73,4 +73,36 @@ namespace "db" do
 
   end
 
+  
+  desc "Export model's table passed as parameter in seeds format."
+  task :export_seeds, [:model] => :environment do |t, args|
+    #unless defined? args[:model].constantize
+    
+    begin
+      args[:model].constantize
+    rescue Exception, SyntaxError, NameError => e
+      raise("The model '#{args[:model]}' does not exist.")
+      exit
+    end
+
+    model = args[:model].constantize
+    model.order(:id).all.each do |attr|
+      puts "#{args[:model]}.create(#{attr.serializable_hash.delete_if {|key, value| ['created_at','updated_at','id'].include?(key)}.to_s.gsub(/[{}]/,'')})"
+    end
+  end
+
+  desc "Ensure auto increment is reset to next available key value."
+  task "fix_auto_increment" => :environment do
+    ActiveRecord::Base.connection.tables.each do |table|
+      unless table == 'schema_migrations'
+        result = ActiveRecord::Base.connection.execute("SELECT id FROM #{table} ORDER BY id DESC LIMIT 1")
+        if result.any?
+          ai_val = result.first['id'].to_i + 1
+          puts "Resetting auto increment ID for #{table} to #{ai_val}"
+          ActiveRecord::Base.connection.execute("ALTER SEQUENCE #{table}_id_seq RESTART WITH #{ai_val}")
+        end
+      end
+    end
+  end
+
 end
