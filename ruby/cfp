@@ -1,0 +1,117 @@
+#!/usr/bin/env ruby -W0
+
+class ChooseFlashPlayer
+
+  def initialize(archive=nil)
+    sudome
+    @plugin_dir = "/Library/Internet\ Plug-Ins"
+    Dir.chdir(@plugin_dir)
+    if archive == "archive"
+      archive_current_fp
+    else
+      # find Flash Player repositories (directories should be named FP-X.X.X)
+      @fp_dirs = Dir.entries(".").find_all{ |e| File.directory? e }.find_all { |e|
+        e =~ /^FP-[0-9]+\.[0-9]+\.[0-9]+(-Debug)*/
+      }
+      # prompt user to choose version
+      puts "\n------------------------------\n\n"
+      puts "Flash Player archive:\n"
+      @i = 0
+      puts "0) Remove Flash Player"
+      @fp_dirs.each { |d|
+        @i += 1
+        puts "#{@i}) #{d}\n"
+      }
+      if @i > 0 then puts "\n------------------------------\n"
+      else
+        puts "\nNo archives found.\n\nPlace each Flash Player plugin\nin a folder named 'FP-X.X.X'."
+        puts "------------------------------"
+        exit
+      end
+      prompt
+    end
+  end
+
+
+  def sudome
+    if ENV["USER"] != "root"
+      exec("sudo #{ENV['_']} #{ARGV.join(' ')}")
+    end
+  end
+
+  def prompt(is_error = false)
+
+    if is_error
+      puts "\nThat choice isn't valid. Type 'x' to cancel or"
+      STDOUT << "choose a number between 1 and #{@i}: "
+    else
+      STDOUT << "Choose the number corresponding to the\nversion you want to activate ('x' to cancel): "
+    end
+
+    @req_version = gets.chomp
+
+    if @req_version.downcase == "x"
+      puts "\nAction cancelled.\n\n"
+      exit
+    end
+
+    @req_version = @req_version.to_i
+
+    if (1..@i) === @req_version
+      activate
+    elsif @req_version === 0
+      activate(true)
+    else
+      prompt(true)
+    end
+
+  end
+
+  def activate(remove=false)
+    close_browsers
+    delete_existing
+    unless remove
+      copy_new
+    end
+    reopen_browsers
+  end
+
+  def close_browsers
+    @active_browsers = []
+    # check = nil
+    all_browsers = [ "Firefox", "Safari", "Opera", "Camino", "'Google Chrome'", "Chromium" ].each { |b|
+      # puts "ps axw | grep #{b} | egrep -v 'grep'"
+      if `ps axw | grep #{b} | egrep -v 'grep'` != ""
+        @active_browsers.push(b)
+        puts "Closing #{b}..."
+        `ps axw | grep #{b} | egrep -v 'grep' | awk '{ print $1 }' | xargs kill -9`
+      end
+    }
+  end
+
+  def delete_existing
+    puts "Removing current plugin..."
+    `rm -r ./Flash\\ Player.plugin`
+    `rm flashplayer.xpt`
+  end
+
+  def copy_new
+    puts "Copying new plugin..."
+    `cp -r #{@fp_dirs[@req_version - 1]}/* ./`
+  end
+
+  def reopen_browsers
+    @active_browsers.each { |b| `open -a #{b}`}
+  end
+
+  def archive_current_fp
+    puts "\nCopying Flash Player.plugin to FP-99.9.999..."
+    `cp -R "Flash Player.plugin" FP-99.9.999/`
+    puts "Copying flashplayer.xpt to FP-99.9.999..."
+    `cp flashplayer.xpt FP-99.9.999/`
+    puts "\nDone!"
+  end
+
+end
+
+ChooseFlashPlayer.new(ARGV[0])
