@@ -3,7 +3,7 @@
 
 # 2. Sample usage
 
-# .ojp-video-slide.flex-video.widescreen{:"data-type" => "vimeo", :"data-embed-id" => "38548629", :"data-width" => "100%", :"data-height" => "534", :class => "current", :"data-tracking-segment-1" => "About", :"data-tracking-segment-2" => "Show Dont Tell"}
+# .ojp-video-slide.flex-video.widescreen{:"data-type" => "vimeo", :"data-embed-id" => "38548629", :"data-width" => "100%", :"data-height" => "534", :class => "current"}
 #   %img.poster{:src => '/images/about/video-showdonttell.jpg', :alt => 'Owen Mural Video'}
 
 # 3.  Can be styled with:
@@ -78,7 +78,6 @@ OJP.Video = class Video
   @height = null
   @markup = null
   @playButtonMarkup = null
-
 
   constructor: (div) ->
 
