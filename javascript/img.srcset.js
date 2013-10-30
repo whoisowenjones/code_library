@@ -1,5 +1,15 @@
 /* imgsrcset - Img srcset polyfill for resolution responsive images. Authors & copyright (c) 2012: WebLinc, David Knight. */
 
+/* This version contains a fix in the parse function to not loop if no img elements are found
+
+USAGE
+=====
+
+add srcset attribute with both path to file and version (2x is retina)
+%img{src:"/img/prod/icon-ar-student-app.png",srcset:"/img/prod/icon-ar-student-app@2x.png 2x", width:"100",height:"100"}
+*/
+
+
 // Imgsrcset
 (function(win) {
     'use strict';
