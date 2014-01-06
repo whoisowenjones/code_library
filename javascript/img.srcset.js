@@ -147,7 +147,6 @@ add srcset attribute with both path to file and version (2x is retina)
 
                 do {
                     img     = imgs[imgLength - imgIndex];
-                    console.log(imgs, imgLength, imgIndex);
                     srcset  = img.getAttribute('srcset') || '';
 
                     if (!srcset) {
