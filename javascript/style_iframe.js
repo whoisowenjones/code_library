@@ -1,6 +1,8 @@
 // Once an iframe has a height, we can insert a link tag to the iframe's head.
 // This example requires jquery, but it should be easy to remove the dependency.
 
+// Based on this thread: http://stackoverflow.com/questions/217776/how-to-apply-css-to-iframe?rq=1
+
 <script>
   
   $(function() {
