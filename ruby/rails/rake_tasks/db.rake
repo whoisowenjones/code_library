@@ -9,7 +9,7 @@ namespace "db" do
   desc "Dump schema and content"
   task "dump" => :environment do
     rails_env = (Rails.env || 'development')
-    app_name = Rails.application.class.parent_name
+    app_name = Rails.application.class.parent_name.downcase
     config = ActiveRecord::Base.configurations[rails_env]
     host = (config['host'] || 'localhost')
     if config["adapter"] == "postgresql"
@@ -17,6 +17,7 @@ namespace "db" do
         ENV["PGPASSWORD"] = config['password'].to_s
       end
       #puts "pg_dump -Fc --no-acl --no-owner -h #{host} -U #{config['username']} #{config['database']} > #{Rails.root}/db/#{app_name}_#{rails_env}.dump"
+      puts "dumping #{app_name}"
       `pg_dump -Fc --no-acl --no-owner -h #{host} -U #{config['username']} #{config['database']} > #{Rails.root}/db/#{app_name}_#{rails_env}.dump`
     end
   end
@@ -24,48 +25,44 @@ namespace "db" do
   desc "Export schema and content"
   task "export_all" => :environment do
     rails_env = (Rails.env || 'development')
-    app_name = Rails.application.class.parent_name
+    app_name = Rails.application.class.parent_name.downcase
     config = ActiveRecord::Base.configurations[rails_env]
     if config["adapter"] == "postgresql"
       unless config['password'].nil?
         ENV["PGPASSWORD"] = config['password'].to_s
       end
       #puts "pg_dump -U #{config['username']} #{config['database']} > #{Rails.root}/db/#{app_name}_#{rails_env}.sql"
-      `pg_dump -U #{config['username']} #{config['database']} > #{Rails.root}/db/#{app_name}_#{rails_env}.sql`
+      `pg_dump -U #{config['username']} #{config['database']} -Ox > #{Rails.root}/db/#{app_name}_#{rails_env}.sql`
     elsif config.adapter == ("mysql" || "mysql2")
       `mysqldump -r #{Rails.root}/db/#{app_name}_#{rails_env}.sql #{config['database']} -u #{config['username']} -p#{config['password'].to_s}`
     end
   end
 
-  desc "Restore dev database from SQL file"
+  desc "Restore database from SQL file"
   task "restore" => [:environment, "db:rebuild"] do
     rails_env = (Rails.env || 'development')
-    app_name = Rails.application.class.parent_name
+    app_name = Rails.application.class.parent_name.downcase
     config = ActiveRecord::Base.configurations[rails_env]
-    # make sure
-    if rails_env != 'development'
-      puts "This is very destructive. Are you sure? (Type 'yes' or cancel)."
-      unless gets.chomp == "yes"
-        puts "Aborted. Close call."
-        exit
-      end
-    end
+    # user roles will conflict in other environments
+    #if rails_env != 'development'
+      #raise "\nSQL file cannot be imported to staging or production environments because of user role conflicts.\nUse db:dump and db:restore_dump instead.\n"
+    #end
 
     file_name = "#{app_name}_#{rails_env}.sql"
     sql_file = "db/#{file_name}"
 
-    if File.exist? sql_file
+    if File.exists? sql_file
 
       if config["adapter"] == "postgresql"
         unless config['password'].nil?
           ENV["PGPASSWORD"] = config['password'].to_s
         end
-        `psql #{config['database']} -f #{sql_file}`
+        `psql -U #{config['username']} #{config['database']} -f #{sql_file}`
       elsif config.adapter == ("mysql" || "mysql2")
         `mysql -u #{config['username']} -p#{config['password'].to_s} --default-character-set=utf8 #{config['database']} < #{sql_file}`
       end
 
-      puts "\nThat should do it. Get to work.\n\n"
+      puts "\nThat should do it.\n\n"
 
     else
       puts "No data file in db/ named '#{file_name}'."
@@ -73,15 +70,42 @@ namespace "db" do
 
   end
 
-  
+  #desc "Restore PostgreSQL database from dump file"
+  #task "restore_dump" => [:environment, "db:rebuild"] do
+    #rails_env = (Rails.env || 'development')
+    #app_name = Rails.application.class.parent_name.downcase
+    #config = ActiveRecord::Base.configurations[rails_env]
+
+    #file_name = "#{app_name}_#{rails_env}.sql"
+    #dump_file = "db/#{file_name}"
+
+    #if File.exists? dump_file
+
+      #if config["adapter"] == "postgresql"
+        ##unless config['password'].nil?
+          ##ENV["PGPASSWORD"] = config['password'].to_s
+        ##end
+        #`pg_restore -U #{config['username']} #{dump_file}`
+      #else
+        #raise "This task is for PostgreSQL databases only."
+      #end
+
+      #puts "\nThat should do it. Get to work.\n\n"
+
+    #else
+      #puts "No dump file in db/ named '#{file_name}'."
+    #end
+
+  #end
+
   desc "Export model's table passed as parameter in seeds format."
   task :export_seeds, [:model] => :environment do |t, args|
     #unless defined? args[:model].constantize
-    
+
     begin
       args[:model].constantize
     rescue Exception, SyntaxError, NameError => e
-      raise("The model '#{args[:model]}' does not exist.")
+      raise("The model '#{args[:model]}' does not exist. Error: #{e}")
       exit
     end
 
