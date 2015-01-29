@@ -1,0 +1,30 @@
+{
+  "name": "exterro.com",
+  "version": "1.0.0",
+  "description": "Marketing site for Exterro",
+  "dependencies": {},
+  "repository": {
+    "type": "svn",
+    "url": "https://candace%40whoisowenjones.com@nternal-repository.exterro.info/craft/stage"
+  },
+  "author": "Owen Jones",
+  "license": "private",
+  "devDependencies": {
+    "grunt": "~0.4.2",
+    "grunt-autoprefixer": "~0.6.4",
+    "grunt-concurrent": "~0.4.0",
+    "grunt-contrib-clean": "~0.5.0",
+    "grunt-contrib-coffee": "~0.8.0",
+    "grunt-contrib-concat": "~0.3.0",
+    "grunt-contrib-connect": "~0.5.0",
+    "grunt-contrib-cssmin": "~0.7.0",
+    "grunt-contrib-sass": "~0.6.0",
+    "grunt-contrib-watch": "~0.5.3",
+    "grunt-shell-spawn": "~0.3.0",
+    "load-grunt-tasks": "~0.2.0",
+    "matchdep": "~0.1.2",
+    "time-grunt": "~0.2.0",
+    "grunt-contrib-uglify": "~0.3.1",
+    "globule": "~0.2.0"
+  }
+}
